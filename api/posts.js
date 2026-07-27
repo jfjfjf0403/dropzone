@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const response = await fetch(`${url}/get/posts_v2`, {
+      const response = await fetch(`${url}/get/posts_v3`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       // 1. 기존 게시글 가져오기
-      const getRes = await fetch(`${url}/get/posts_v2`, {
+      const getRes = await fetch(`${url}/get/posts_v3`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const getData = await getRes.json();
@@ -72,13 +72,13 @@ export default async function handler(req, res) {
       if (posts.length > 100) posts = posts.slice(0, 100);
 
       // 3. 다시 저장
-      const setRes = await fetch(`${url}/set/posts_v2`, {
+      const setRes = await fetch(`${url}/set/posts_v3`, {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify([JSON.stringify(posts)])
+        body: JSON.stringify(posts)
       });
 
       if (!setRes.ok) {
