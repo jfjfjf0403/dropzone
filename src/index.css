@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  body {
+    @apply bg-orange-500 text-zinc-900 overflow-hidden transition-colors duration-300;
+  }
+  .dark body {
+    @apply bg-[#0A0A0B] text-white;
+    /* Subtly textured background */
+    background-image: radial-gradient(circle at 50% 0%, rgba(74, 93, 35, 0.15) 0%, transparent 70%),
+                      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: #ffffff;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  }
+  .dark .glass-panel {
+    background: rgba(28, 28, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .neon-text-cyan {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+
+  .neon-border-yellow {
+    box-shadow: 0 0 10px rgba(255, 184, 0, 0.4), inset 0 0 10px rgba(255, 184, 0, 0.2);
+  }
+
+  /* Hide scrollbar for LFG Swipe Area */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
