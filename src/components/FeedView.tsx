@@ -10,7 +10,7 @@ interface FeedViewProps {
 }
 
 export default function FeedView({ posts, setPosts, currentUserName }: FeedViewProps) {
-  const [sortBy, setSortBy] = useState<'hot' | 'new'>('hot');
+  const [sortBy, setSortBy] = useState<'hot' | 'new'>('new');
   const [votedPosts, setVotedPosts] = useState<Set<number>>(new Set());
   const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
