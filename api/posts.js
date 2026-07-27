@@ -4,14 +4,25 @@ export default async function handler(req, res) {
 
   // 로컬 개발 환경이거나 KV 설정이 안 되어 있는 경우의 Fallback
   if (!url || !token) {
+    if (req.method === 'POST') {
+      return res.status(201).json({
+        id: Date.now(),
+        createdAt: Date.now(),
+        type: req.body?.type || "clip",
+        author: req.body?.author || "Unknown",
+        content: "[에러] Vercel KV 데이터베이스가 아직 연결되지 않았습니다!",
+        upvotes: 0,
+        comments: 0
+      });
+    }
     return res.status(200).json([
       {
         "id": 1785142298914,
         "createdAt": 1785142646464,
         "type": "clip",
-        "author": "JELLFI-_-",
-        "content": "테스트 데이터입니다! Vercel KV 데이터베이스를 연결해주세요.",
-        "upvotes": 100,
+        "author": "System",
+        "content": "피드 기능이 활성화되었습니다. 하지만 데이터베이스(KV) 연결이 아직 인식되지 않았습니다.",
+        "upvotes": 0,
         "comments": 0
       }
     ]);
@@ -75,6 +86,17 @@ export default async function handler(req, res) {
     // 그 외 메서드 처리
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    if (req.method === 'POST') {
+      return res.status(201).json({
+        id: Date.now(),
+        createdAt: Date.now(),
+        type: "clip",
+        author: "System Error",
+        content: `[에러 발생]: ${err.message}`,
+        upvotes: 0,
+        comments: 0
+      });
+    }
+    return res.status(500).json([]);
   }
 }
