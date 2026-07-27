@@ -120,24 +120,24 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
           
           <div className="flex gap-4 bg-white/50 dark:bg-zinc-900/50 p-2 rounded-2xl border border-zinc-800/80 backdrop-blur-sm">
             <button 
-              onClick={() => setSortBy('hot')}
+              onClick={() => setSortBy('new')}
               className={`flex items-center gap-2 px-6 py-2 rounded-xl font-teko font-bold uppercase text-lg transition-all duration-300 ${
-                sortBy === 'hot' 
+                sortBy === 'new' 
                   ? 'bg-gradient-to-r from-pubg-cyan to-blue-500 text-zinc-900 dark:text-white shadow-[0_0_15px_rgba(0,240,255,0.4)]' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white hover:bg-gray-100 dark:bg-zinc-800'
               }`}
             >
-              <Flame className="w-5 h-5" /> Hot
+              <Clock className="w-5 h-5" /> New
             </button>
             <button 
-              onClick={() => setSortBy('new')}
+              onClick={() => setSortBy('hot')}
               className={`flex items-center gap-2 px-6 py-2 rounded-xl font-teko font-bold uppercase text-lg transition-all duration-300 ${
-                sortBy === 'new' 
-                  ? 'bg-gray-200 dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-md' 
+                sortBy === 'hot' 
+                  ? 'bg-gradient-to-r from-orange-400 to-red-500 text-zinc-900 dark:text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white hover:bg-gray-100 dark:bg-zinc-800'
               }`}
             >
-              <Clock className="w-5 h-5" /> New
+              <Flame className="w-5 h-5" /> Hot
             </button>
           </div>
         </div>

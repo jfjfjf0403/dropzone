@@ -34,7 +34,7 @@ interface Route {
 export default function MapView() {
   const [selectedMap, setSelectedMap] = useState(MAPS[0]);
   const [scale, setScale] = useState(0.45);
-  const [position, setPosition] = useState({ x: -150, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [selectedColor, setSelectedColor] = useState(PING_COLORS[0].hex);
   
   // 라우트 상태 관리
@@ -61,7 +61,7 @@ export default function MapView() {
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.2));
   const handleReset = () => {
     setScale(0.45);
-    setPosition({ x: -150, y: 0 });
+    setPosition({ x: 0, y: 0 });
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -293,7 +293,7 @@ export default function MapView() {
                   setImageError(false);
                   clearAllRoutes();
                   setScale(0.45);
-                  setPosition({ x: -150, y: 0 });
+                  setPosition({ x: 0, y: 0 });
                 }}
                 className={`w-full text-center px-2 py-2 rounded-lg font-teko text-lg tracking-wide uppercase transition ${selectedMap.id === m.id ? 'bg-pubg-cyan text-pubg-dark font-bold' : 'bg-gray-100/50 dark:bg-zinc-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:bg-zinc-800 hover:text-zinc-900 dark:text-white'}`}
               >
