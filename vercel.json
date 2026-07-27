@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/pubg/(.*)",
+      "destination": "https://api.pubg.com/$1"
+    },
+    {
+      "source": "/api/steam/(.*)",
+      "destination": "https://api.steampowered.com/$1"
+    },
+    {
+      "source": "/api/translate/(.*)",
+      "destination": "https://translate.googleapis.com/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
