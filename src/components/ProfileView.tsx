@@ -31,7 +31,7 @@ export default function ProfileView({ accountId, playerName, favorites = [], tog
     setLoading(true);
     setError(null);
     try {
-      const targetId = accountId || 'JELLFI-_-';
+      const targetId = accountId || 'account.60467965e3234f00bd9b9fa29d2b1990';
       const data = await getPlayerStats(targetId, true, isManualRefresh);
       setStats(data);
       if (isManualRefresh) {
