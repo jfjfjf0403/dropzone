@@ -15,6 +15,9 @@ export default async function handler(req, res) {
         comments: 0
       });
     }
+    if (req.method === 'DELETE') {
+      return res.status(200).json({ ok: true });
+    }
     return res.status(200).json([]);
   }
 
@@ -88,6 +91,50 @@ export default async function handler(req, res) {
       return res.status(201).json(newPost);
     }
 
+    if (req.method === 'DELETE') {
+      const id = req.query.id;
+      if (!id) {
+        return res.status(400).json({ error: 'Missing id' });
+      }
+
+      // 1. 기존 게시글 가져오기
+      const getRes = await fetch(`${url}/get/posts_v3`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const getData = await getRes.json();
+      let posts = [];
+      if (getData.result) {
+        try {
+          posts = JSON.parse(getData.result);
+          if (typeof posts === 'string') {
+            posts = JSON.parse(posts);
+          }
+        } catch (e) {
+          posts = [];
+        }
+      }
+      if (!Array.isArray(posts)) posts = [];
+
+      // 2. 대상 게시글 제거
+      const filtered = posts.filter(p => String(p.id) !== String(id));
+
+      // 3. 다시 저장
+      const setRes = await fetch(`${url}/set/posts_v3`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(filtered)
+      });
+
+      if (!setRes.ok) {
+        throw new Error('Failed to save to KV database');
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     if (req.method === 'POST') {
@@ -100,6 +147,9 @@ export default async function handler(req, res) {
         upvotes: 0,
         comments: 0
       });
+    }
+    if (req.method === 'DELETE') {
+      return res.status(500).json({ error: err.message });
     }
     return res.status(500).json([]);
   }

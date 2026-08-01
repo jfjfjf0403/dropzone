@@ -38,12 +38,21 @@ app.post('/api/posts', (req, res) => {
     createdAt: Date.now(),
     ...req.body
   };
-  
+
   // Add to the front
   db.posts = [newPost, ...db.posts];
   saveDB(db);
-  
+
   res.json(newPost);
+});
+
+app.delete('/api/posts', (req, res) => {
+  const db = getDB();
+  const id = req.query.id;
+  db.posts = db.posts.filter(p => String(p.id) !== String(id));
+  saveDB(db);
+
+  res.json({ ok: true });
 });
 
 app.listen(PORT, () => {

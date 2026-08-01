@@ -63,6 +63,9 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
       if (selectedPost?.id === postId) {
         setSelectedPost(null);
       }
+      fetch(`/api/posts?id=${postId}`, { method: 'DELETE' }).catch(err => {
+        console.error('Failed to delete post on server', err);
+      });
     }
   };
 
