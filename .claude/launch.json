@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ham-preview",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d E:\\HAM && npm run preview"],
+      "port": 4173
+    },
+    {
+      "name": "ham-dev",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d E:\\HAM && npm run dev"],
+      "port": 5173
+    },
+    {
+      "name": "dropzone-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    }
+  ]
+}

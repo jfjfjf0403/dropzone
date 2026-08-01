@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 90 node_modules/.bin/vite build)",
+      "Bash(node_modules/.bin/oxlint)",
+      "Bash(mkdir -p _archive)",
+      "Bash(mv -v test.js test2.js test3.cjs test5.cjs test6.cjs test8.cjs test9.cjs test10.cjs test11.cjs test12.cjs test13.cjs test14.cjs test15.cjs test16.cjs test17.cjs test18.cjs test_hakatory.cjs cf.log pinggy.log tunnel.log \".env - 복사본.example\" fix-ts.cjs \"{\" _archive/)",
+      "Bash(cd \"E:/PUBG/dropzone\" && stat -c '%y %n' src/**/* 2>/dev/null | sort -r | head -30; echo \"---latest modified files---\"; find . -maxdepth 4 -type f -not -path \"./node_modules/*\" -not -path \"./.git/*\" -not -path \"./dist/*\" -printf '%T@ %p\\\\n' 2>/dev/null | sort -rn | head -30)",
+      "Bash(grep -n \"^  [a-zA-Z].*\\(.*\\).*{$\\\\|^  private \\\\|^  public \\\\|class \" scenes/GameScene.ts)",
+      "Bash(npx tsc *)",
+      "Bash(mkdir -p \"E:/HAM/.claude\")",
+      "Bash(npx vite *)",
+      "Bash(node -e ' *)",
+      "Bash(awk 'NR==386{print NR\": \"$0} NR>386 && NR<=524 && /^    \\\\}/{print NR\": \"$0}' src/scenes/GameScene.ts)",
+      "Bash(npm run *)",
+      "Read(//c/Users/user/.claude/projects/E--PUBG-dropzone/**)",
+      "Read(//c/Users/user/.claude/projects//**)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git rm *)",
+      "Bash(tasklist)",
+      "Bash(wmic OS get FreePhysicalMemory,TotalVisibleMemorySize /Value)",
+      "PowerShell(Get-CimInstance Win32_OperatingSystem)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npm run build)",
+      "Bash(git checkout *)",
+      "Bash(npx --version)",
+      "Bash(ls -la /c/Users/user/AppData/Local/Temp/claude/E--PUBG-dropzone/8b1ef0fd-75f9-4f64-80bd-be716193c2fc/scratchpad/repo_compare 2>&1 | head -50)",
+      "Bash(cd /c/Users/user/AppData/Local/Temp/claude/E--PUBG-dropzone/8b1ef0fd-75f9-4f64-80bd-be716193c2fc/scratchpad *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(git config *)",
+      "Bash(npm install *)",
+      "Bash(npx vercel *)",
+      "Bash(pkill -f \"vercel\")",
+      "Bash(git reset *)"
+    ]
+  }
+}
