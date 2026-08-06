@@ -15,11 +15,12 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
   const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-  // Initialize comments state
+  // Initialize comments state (use real saved comments when available, otherwise
+  // fall back to generated dummy comments for the client-only sample posts)
   const [commentsState, setCommentsState] = useState<Record<number, CommentType[]>>(() => {
     const initial: Record<number, CommentType[]> = {};
     posts.forEach(p => {
-      initial[p.id] = generateDummyComments(p.comments);
+      initial[p.id] = p.commentsList ?? generateDummyComments(p.comments);
     });
     return initial;
   });
@@ -35,9 +36,12 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
   };
 
   const handleUpvote = (postId: number) => {
+    const isVoted = votedPosts.has(postId);
+    const delta = isVoted ? -1 : 1;
+
     setVotedPosts(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(postId)) {
+      if (isVoted) {
         newSet.delete(postId);
       } else {
         newSet.add(postId);
@@ -45,15 +49,17 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
       return newSet;
     });
 
-    setPosts(prevPosts => 
-      prevPosts.map(p => {
-        if (p.id === postId) {
-          const isVoted = votedPosts.has(postId);
-          return { ...p, upvotes: p.upvotes + (isVoted ? -1 : 1) };
-        }
-        return p;
-      })
+    setPosts(prevPosts =>
+      prevPosts.map(p => p.id === postId ? { ...p, upvotes: p.upvotes + delta } : p)
     );
+
+    fetch(`/api/posts?id=${postId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'vote', delta })
+    }).catch(err => {
+      console.error('Failed to sync vote to server', err);
+    });
   };
 
   const handleDelete = (e: React.MouseEvent, postId: number) => {
@@ -91,6 +97,14 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
       ]
     }));
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p));
+
+    fetch(`/api/posts?id=${postId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'comment', author: currentUserName, text })
+    }).catch(err => {
+      console.error('Failed to sync comment to server', err);
+    });
   };
 
   const sortedPosts = useMemo(() => {

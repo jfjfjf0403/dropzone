@@ -14,6 +14,7 @@ export interface Post {
   videoUrl?: string;
   youtubeId?: string;
   duration?: string;
+  commentsList?: CommentType[];
 }
 
 export const NOW = Date.now();

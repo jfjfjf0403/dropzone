@@ -55,6 +55,36 @@ app.delete('/api/posts', (req, res) => {
   res.json({ ok: true });
 });
 
+app.patch('/api/posts', (req, res) => {
+  const db = getDB();
+  const id = req.query.id;
+  const idx = db.posts.findIndex(p => String(p.id) === String(id));
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+
+  const { action } = req.body || {};
+
+  if (action === 'vote') {
+    const delta = req.body?.delta === -1 ? -1 : 1;
+    db.posts[idx].upvotes = (db.posts[idx].upvotes || 0) + delta;
+  } else if (action === 'comment') {
+    const author = (req.body?.author || 'Guest').toString().slice(0, 50);
+    const text = (req.body?.text || '').toString().trim().slice(0, 500);
+    if (!text) {
+      return res.status(400).json({ error: 'Empty comment' });
+    }
+    const comment = { id: Date.now(), author, text };
+    db.posts[idx].commentsList = [...(db.posts[idx].commentsList || []), comment];
+    db.posts[idx].comments = db.posts[idx].commentsList.length;
+  } else {
+    return res.status(400).json({ error: 'Unknown action' });
+  }
+
+  saveDB(db);
+  res.json(db.posts[idx]);
+});
+
 app.listen(PORT, () => {
   console.log(`Local API server running on port ${PORT}`);
 });

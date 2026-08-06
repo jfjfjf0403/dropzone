@@ -15,54 +15,54 @@ export default async function handler(req, res) {
         comments: 0
       });
     }
-    if (req.method === 'DELETE') {
+    if (req.method === 'DELETE' || req.method === 'PATCH') {
       return res.status(200).json({ ok: true });
     }
     return res.status(200).json([]);
   }
 
+  const getPosts = async () => {
+    const getRes = await fetch(`${url}/get/posts_v3`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const getData = await getRes.json();
+    let posts = [];
+    if (getData.result) {
+      try {
+        posts = JSON.parse(getData.result);
+        if (typeof posts === 'string') {
+          posts = JSON.parse(posts);
+        }
+      } catch (e) {
+        posts = [];
+      }
+    }
+    return Array.isArray(posts) ? posts : [];
+  };
+
+  const savePosts = async (posts) => {
+    const setRes = await fetch(`${url}/set/posts_v3`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(posts)
+    });
+    if (!setRes.ok) {
+      throw new Error('Failed to save to KV database');
+    }
+  };
+
   try {
     if (req.method === 'GET') {
-      const response = await fetch(`${url}/get/posts_v3`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      
-      let posts = [];
-      if (data.result) {
-        try {
-          posts = JSON.parse(data.result);
-          // If it accidentally parsed into a string, parse again
-          if (typeof posts === 'string') {
-            posts = JSON.parse(posts);
-          }
-        } catch (e) {
-          posts = [];
-        }
-      }
-      return res.status(200).json(Array.isArray(posts) ? posts : []);
+      const posts = await getPosts();
+      return res.status(200).json(posts);
     }
 
     if (req.method === 'POST') {
-      // 1. 기존 게시글 가져오기
-      const getRes = await fetch(`${url}/get/posts_v3`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const getData = await getRes.json();
-      let posts = [];
-      if (getData.result) {
-        try {
-          posts = JSON.parse(getData.result);
-          if (typeof posts === 'string') {
-            posts = JSON.parse(posts);
-          }
-        } catch (e) {
-          posts = [];
-        }
-      }
-      if (!Array.isArray(posts)) posts = [];
+      const posts = await getPosts();
 
-      // 2. 새 게시글 추가
       const newPost = {
         id: Date.now(),
         createdAt: Date.now(),
@@ -70,24 +70,11 @@ export default async function handler(req, res) {
         upvotes: 0,
         comments: 0
       };
-      
+
       posts.unshift(newPost);
-      if (posts.length > 100) posts = posts.slice(0, 100);
+      const trimmed = posts.length > 100 ? posts.slice(0, 100) : posts;
 
-      // 3. 다시 저장
-      const setRes = await fetch(`${url}/set/posts_v3`, {
-        method: 'POST',
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(posts)
-      });
-
-      if (!setRes.ok) {
-        throw new Error('Failed to save to KV database');
-      }
-
+      await savePosts(trimmed);
       return res.status(201).json(newPost);
     }
 
@@ -97,42 +84,45 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing id' });
       }
 
-      // 1. 기존 게시글 가져오기
-      const getRes = await fetch(`${url}/get/posts_v3`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const getData = await getRes.json();
-      let posts = [];
-      if (getData.result) {
-        try {
-          posts = JSON.parse(getData.result);
-          if (typeof posts === 'string') {
-            posts = JSON.parse(posts);
-          }
-        } catch (e) {
-          posts = [];
-        }
-      }
-      if (!Array.isArray(posts)) posts = [];
-
-      // 2. 대상 게시글 제거
+      const posts = await getPosts();
       const filtered = posts.filter(p => String(p.id) !== String(id));
 
-      // 3. 다시 저장
-      const setRes = await fetch(`${url}/set/posts_v3`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(filtered)
-      });
+      await savePosts(filtered);
+      return res.status(200).json({ ok: true });
+    }
 
-      if (!setRes.ok) {
-        throw new Error('Failed to save to KV database');
+    if (req.method === 'PATCH') {
+      const id = req.query.id;
+      if (!id) {
+        return res.status(400).json({ error: 'Missing id' });
       }
 
-      return res.status(200).json({ ok: true });
+      const posts = await getPosts();
+      const idx = posts.findIndex(p => String(p.id) === String(id));
+      if (idx === -1) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      const { action } = req.body || {};
+
+      if (action === 'vote') {
+        const delta = req.body?.delta === -1 ? -1 : 1;
+        posts[idx].upvotes = (posts[idx].upvotes || 0) + delta;
+      } else if (action === 'comment') {
+        const author = (req.body?.author || 'Guest').toString().slice(0, 50);
+        const text = (req.body?.text || '').toString().trim().slice(0, 500);
+        if (!text) {
+          return res.status(400).json({ error: 'Empty comment' });
+        }
+        const comment = { id: Date.now(), author, text };
+        posts[idx].commentsList = [...(posts[idx].commentsList || []), comment];
+        posts[idx].comments = posts[idx].commentsList.length;
+      } else {
+        return res.status(400).json({ error: 'Unknown action' });
+      }
+
+      await savePosts(posts);
+      return res.status(200).json(posts[idx]);
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
@@ -148,7 +138,7 @@ export default async function handler(req, res) {
         comments: 0
       });
     }
-    if (req.method === 'DELETE') {
+    if (req.method === 'DELETE' || req.method === 'PATCH') {
       return res.status(500).json({ error: err.message });
     }
     return res.status(500).json([]);
