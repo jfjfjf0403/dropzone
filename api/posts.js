@@ -1,3 +1,14 @@
+const RATE_LIMITS = {
+  post: 10,    // 새 글 작성: 10초에 1회
+  comment: 5,  // 댓글 작성: 5초에 1회
+};
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
 export default async function handler(req, res) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -54,6 +65,25 @@ export default async function handler(req, res) {
     }
   };
 
+  // IP + action 단위로 짧은 쿨다운을 둬서 스팸성 연타 작성을 막는다.
+  // 이미 쿨다운 중이면 false를 반환한다.
+  const checkRateLimit = async (action, windowSec) => {
+    const ip = getClientIp(req);
+    const key = `ratelimit_${action}_${ip}`;
+    const getRes = await fetch(`${url}/get/${key}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const getData = await getRes.json();
+    if (getData.result) return false;
+
+    await fetch(`${url}/set/${key}?EX=${windowSec}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: '1'
+    });
+    return true;
+  };
+
   try {
     if (req.method === 'GET') {
       const posts = await getPosts();
@@ -61,6 +91,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const allowed = await checkRateLimit('post', RATE_LIMITS.post);
+      if (!allowed) {
+        return res.status(429).json({ error: `너무 빠릅니다. ${RATE_LIMITS.post}초 후 다시 시도해주세요.` });
+      }
+
       const posts = await getPosts();
 
       const newPost = {
@@ -109,6 +144,11 @@ export default async function handler(req, res) {
         const delta = req.body?.delta === -1 ? -1 : 1;
         posts[idx].upvotes = (posts[idx].upvotes || 0) + delta;
       } else if (action === 'comment') {
+        const allowed = await checkRateLimit('comment', RATE_LIMITS.comment);
+        if (!allowed) {
+          return res.status(429).json({ error: `너무 빠릅니다. ${RATE_LIMITS.comment}초 후 다시 시도해주세요.` });
+        }
+
         const author = (req.body?.author || 'Guest').toString().slice(0, 50);
         const text = (req.body?.text || '').toString().trim().slice(0, 500);
         if (!text) {
@@ -116,6 +156,15 @@ export default async function handler(req, res) {
         }
         const comment = { id: Date.now(), author, text };
         posts[idx].commentsList = [...(posts[idx].commentsList || []), comment];
+        posts[idx].comments = posts[idx].commentsList.length;
+      } else if (action === 'deleteComment') {
+        const commentId = req.body?.commentId;
+        if (!commentId) {
+          return res.status(400).json({ error: 'Missing commentId' });
+        }
+        posts[idx].commentsList = (posts[idx].commentsList || []).filter(
+          c => String(c.id) !== String(commentId)
+        );
         posts[idx].comments = posts[idx].commentsList.length;
       } else {
         return res.status(400).json({ error: 'Unknown action' });

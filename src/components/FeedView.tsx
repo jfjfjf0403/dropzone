@@ -89,11 +89,12 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
 
   const handleAddComment = (postId: number, text: string) => {
     if (!text.trim()) return;
+    const tempId = Date.now();
     setCommentsState(prev => ({
       ...prev,
       [postId]: [
         ...(prev[postId] || []),
-        { id: Date.now(), author: currentUserName, text }
+        { id: tempId, author: currentUserName, text }
       ]
     }));
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p));
@@ -102,8 +103,34 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'comment', author: currentUserName, text })
+    }).then(res => {
+      if (res.status === 429) {
+        // 스팸 방지 쿨다운에 걸림 - 방금 추가한 낙관적 댓글을 되돌린다.
+        setCommentsState(prev => ({
+          ...prev,
+          [postId]: (prev[postId] || []).filter(c => c.id !== tempId)
+        }));
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: Math.max(0, p.comments - 1) } : p));
+        alert('댓글을 너무 빠르게 작성하고 있어요. 잠시 후 다시 시도해주세요.');
+      }
     }).catch(err => {
       console.error('Failed to sync comment to server', err);
+    });
+  };
+
+  const handleDeleteComment = (postId: number, commentId: number) => {
+    setCommentsState(prev => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter(c => c.id !== commentId)
+    }));
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: Math.max(0, p.comments - 1) } : p));
+
+    fetch(`/api/posts?id=${postId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deleteComment', commentId })
+    }).catch(err => {
+      console.error('Failed to delete comment on server', err);
     });
   };
 
@@ -421,12 +448,23 @@ export default function FeedView({ posts, setPosts, currentUserName }: FeedViewP
                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author}`} className="w-full h-full object-cover" />
                       </div>
                       <div className="bg-gray-100/50 dark:bg-zinc-800/50 p-4 rounded-2xl rounded-tl-none text-sm text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-zinc-700/50 w-full">
-                        <span className="font-bold text-pubg-cyan flex items-center gap-1 mb-1.5">
-                          {c.author}
-                          {c.author === 'JELLFI-_-' && (
-                            <BadgeCheck className="w-3.5 h-3.5 text-blue-400 fill-blue-500/20 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-pubg-cyan flex items-center gap-1">
+                            {c.author}
+                            {c.author === 'JELLFI-_-' && (
+                              <BadgeCheck className="w-3.5 h-3.5 text-blue-400 fill-blue-500/20 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                            )}
+                          </span>
+                          {c.author === currentUserName && (
+                            <button
+                              onClick={() => handleDeleteComment(selectedPost.id, c.id)}
+                              className="p-1 rounded-full text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition"
+                              title="댓글 삭제"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           )}
-                        </span>
+                        </div>
                         <p className="leading-relaxed">{c.text}</p>
                       </div>
                     </div>

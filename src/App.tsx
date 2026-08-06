@@ -278,16 +278,25 @@ function App() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(newPost)
             })
-            .then(res => res.json())
+            .then(async res => {
+              if (res.status === 429) {
+                const data = await res.json().catch(() => null);
+                alert(data?.error || '글을 너무 빠르게 작성하고 있어요. 잠시 후 다시 시도해주세요.');
+                return null;
+              }
+              return res.json();
+            })
             .then(savedPost => {
-              setFeedPosts(prev => [savedPost, ...prev]);
+              if (savedPost) {
+                setFeedPosts(prev => [savedPost, ...prev]);
+              }
             })
             .catch(err => {
               console.error('Failed to save post', err);
               // Fallback to local state if API fails
               setFeedPosts(prev => [newPost, ...prev]);
             });
-          }} 
+          }}
         />
       </main>
     </div>
